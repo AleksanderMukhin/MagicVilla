@@ -2,13 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MagicVilla_VillaAPI.Models.Dto;
 
-public class VillaDto
+public class VillaCreateDto
 {
-    public int Id { get; set; }
     //Валидация данных обязательное поле и максимальное длина
     [Required]
     [MaxLength(30)]
-    
     public string Name { get; set; }
     public string Details { get; set; }
     [Required]
