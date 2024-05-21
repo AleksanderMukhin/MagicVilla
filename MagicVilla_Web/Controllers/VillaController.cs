@@ -1,7 +1,9 @@
 using AutoMapper;
+using MagicVilla_Utility;
 using MagicVilla_Web.Models;
 using MagicVilla_Web.Models.Dto;
 using MagicVilla_Web.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -23,7 +25,7 @@ public class VillaController : Controller
     {
         List<VillaDto> list = new();
 
-        var response = await _villaServices.GetAllAsync<APIResponse>();
+        var response = await _villaServices.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
         if (response != null && response.IsSuccess)
         {
             list = JsonConvert.DeserializeObject<List<VillaDto>>(Convert.ToString(response.Result));
@@ -31,30 +33,34 @@ public class VillaController : Controller
         return View(list);
     }
     
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> CreateVilla()
     {
         return View();
     }
     
     [HttpPost]
+    [Authorize(Roles = "admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateVilla(VillaCreateDto model)
     {
         if (ModelState.IsValid)
         {
-            var response = await _villaServices.CreateAsync<APIResponse>(model);
+            var response = await _villaServices.CreateAsync<APIResponse>(model, HttpContext.Session.GetString(SD.SessionToken));
             if (response != null && response.IsSuccess)
             {
+                TempData["success"] = "Villa created succesfully";
                 return RedirectToAction(nameof(IndexVilla));
             }
         }
-        
+        TempData["error"] = "Error created";
         return View(model);
     }
     
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> UpdateVilla(int villaId)
     {
-        var response = await _villaServices.GetAsync<APIResponse>(villaId);
+        var response = await _villaServices.GetAsync<APIResponse>(villaId, HttpContext.Session.GetString(SD.SessionToken));
         if (response != null && response.IsSuccess)
         {
             VillaDto model = JsonConvert.DeserializeObject<VillaDto>(Convert.ToString(response.Result));
@@ -64,24 +70,27 @@ public class VillaController : Controller
     }
     
     [HttpPost]
+    [Authorize(Roles = "admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateVilla(VillaUpdateDto model)
     {
         if (ModelState.IsValid)
         {
-            var response = await _villaServices.UpdateAsync<APIResponse>(model);
+            TempData["success"] = "Villa updated succesfully";
+            var response = await _villaServices.UpdateAsync<APIResponse>(model, HttpContext.Session.GetString(SD.SessionToken));
             if (response != null && response.IsSuccess)
             {
                 return RedirectToAction(nameof(IndexVilla));
             }
         }
-        
+        TempData["error"] = "Error updated";
         return View(model);
     }
     
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> DeleteVilla(int villaId)
     {
-        var response = await _villaServices.GetAsync<APIResponse>(villaId);
+        var response = await _villaServices.GetAsync<APIResponse>(villaId, HttpContext.Session.GetString(SD.SessionToken));
         if (response != null && response.IsSuccess)
         {
             VillaDto model = JsonConvert.DeserializeObject<VillaDto>(Convert.ToString(response.Result));
@@ -91,15 +100,17 @@ public class VillaController : Controller
     }
     
     [HttpPost]
+    [Authorize(Roles = "admin")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteVilla(VillaDto model)
     {
-            var response = await _villaServices.DeleteAsync<APIResponse>(model.Id);
+            var response = await _villaServices.DeleteAsync<APIResponse>(model.Id, HttpContext.Session.GetString(SD.SessionToken));
             if (response != null && response.IsSuccess)
             {
+                TempData["success"] = "Villa deleted succesfully";
                 return RedirectToAction(nameof(IndexVilla));
             }
-            
+            TempData["error"] = "Error deleted";    
         return View(model);
     }
 }

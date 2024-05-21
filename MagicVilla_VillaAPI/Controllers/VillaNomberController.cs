@@ -3,6 +3,7 @@ using AutoMapper;
 using MagicVilla_VillaAPI.Models;
 using MagicVilla_VillaAPI.Models.Dto;
 using MagicVilla_VillaAPI.Repository.IRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
@@ -80,6 +81,7 @@ public class VillaNomberController : ControllerBase
     }
     
     [HttpPost]
+    [Authorize (Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -90,13 +92,13 @@ public class VillaNomberController : ControllerBase
             //Проверка на уникальное имя. Работает только без [ApiController]
             if (await _dbNomber.GetAsync(u=>u.VillaNo == createDto.VillaNo)!=null)
             {
-                ModelState.AddModelError("CustomError","Nomber already Exists!");
+                ModelState.AddModelError("ErrorMessages","Nomber already Exists!");
                 return BadRequest(ModelState);
             }
 
             if (await _dbVilla.GetAsync(u=>u.Id==createDto.VillaId)==null)
             {
-                ModelState.AddModelError("CustomError","Villa ID is invalid!");
+                ModelState.AddModelError("ErrorMessages","Villa ID is invalid!");
                 return BadRequest(ModelState);
             }
             
@@ -121,6 +123,7 @@ public class VillaNomberController : ControllerBase
     }
     
     [HttpDelete("{id:int}", Name = "DeleteNomber")]
+    [Authorize (Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -152,6 +155,7 @@ public class VillaNomberController : ControllerBase
     }
     
     [HttpPut("{id:int}", Name = "UpdateNomber")]
+    [Authorize (Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<APIResponse>> UpdateNomber(int id, [FromBody] VillaNomberUpdateDTO updateDto)
@@ -165,7 +169,7 @@ public class VillaNomberController : ControllerBase
             
             if (await _dbVilla.GetAsync(u=>u.Id==updateDto.VillaId)==null)
             {
-                ModelState.AddModelError("CustomError","Villa ID is invalid!");
+                ModelState.AddModelError("ErrorMessages","Villa ID is invalid!");
                 return BadRequest(ModelState);
             }
 
@@ -199,6 +203,7 @@ public class VillaNomberController : ControllerBase
 
     
     [HttpPatch("{id:int}", Name = "UpdatePartialNomber")]
+    [Authorize (Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdatePartialNomber(int id, JsonPatchDocument<VillaNomberUpdateDTO> patchDTO)

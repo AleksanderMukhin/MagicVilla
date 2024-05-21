@@ -3,6 +3,7 @@ using AutoMapper;
 using MagicVilla_VillaAPI.Models;
 using MagicVilla_VillaAPI.Models.Dto;
 using MagicVilla_VillaAPI.Repository.IRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,6 +29,9 @@ public class VillaAPIController : ControllerBase
     
     //Указывают тип запроса для swagger
     [HttpGet]
+    //[Authorize]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<APIResponse>> GetVillas()
     {
         try
@@ -48,9 +52,12 @@ public class VillaAPIController : ControllerBase
     }
     
     [HttpGet("{id:int}", Name = "GetVilla")]
+    //[Authorize (Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(404)]
     [ProducesResponseType(400)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<APIResponse>> GetVilla(int id)
     {
         try
@@ -80,6 +87,7 @@ public class VillaAPIController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize (Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -90,7 +98,7 @@ public class VillaAPIController : ControllerBase
         //Проверка на уникальное имя. Работает только без [ApiController]
         if (await _dbVilla.GetAsync(u=>u.Name.ToLower()==createDto.Name.ToLower())!=null)
         {
-            ModelState.AddModelError("CustomError","Villa already Exists!");
+            ModelState.AddModelError("ErrorMessages","Villa already Exists!");
             return BadRequest(ModelState);
         }
         if (createDto == null)
@@ -114,8 +122,11 @@ public class VillaAPIController : ControllerBase
     }
 
     [HttpDelete("{id:int}", Name = "DeleteVilla")]
+    [Authorize (Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<APIResponse>> DeleteVilla(int id)
     {
@@ -146,6 +157,7 @@ public class VillaAPIController : ControllerBase
 
     //Обновляет данные всех полей (Все поля)
     [HttpPut("{id:int}", Name = "UpdateVilla")]
+    [Authorize (Roles = "admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<APIResponse>> UpdateVilla(int id, [FromBody] VillaUpdateDto updateDto)
